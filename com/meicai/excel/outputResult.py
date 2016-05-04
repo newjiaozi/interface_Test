@@ -14,7 +14,7 @@ now = time.strftime('%Y%m%d-%H%M%S',time.localtime())
 fail_num=0
 time_sum=0
 
-def outpu(argLists):
+def outpu(argLists,testcase):
     with open('model.html','r') as res:
         soup = BeautifulSoup(res,"html.parser")
         summary = soup.find(id='summary')
@@ -27,22 +27,22 @@ def outpu(argLists):
                 fail_num += 1            
             time_sum += float(i[3])
         suc_rate_float = (argLists_lenth-fail_num)/float(argLists_lenth)*100
-        print type(suc_rate_float)
+#         print type(suc_rate_float)
         suc_rate = "%.2f%%"  % suc_rate_float
         avg_time = time_sum/argLists_lenth
         str_avg_time = '%.3f' % avg_time
         handelTrTd(summary, [str(argLists_lenth),str(fail_num),suc_rate,str_avg_time])
         detail = soup.find(id='detail')        
         for i in range(len(argLists)):
-            print '#########',argLists[i]
+#             print '#########',argLists[i]
             detail_result = BeautifulSoup('<tr valign="top" class=""><td></td><td align="left"></td><td align="center"></td><td align="right"></td></tr>', "html.parser")
             detail.append(handelTrTd(detail_result.tr, argLists[i]))
 
-        writeHtml(soup.prettify(encoding='utf-8'))
+        writeHtml(soup.prettify(encoding='utf-8'),testcase)
     
 
-def writeHtml(soup):
-    with open('%s_result.html' % now,'w') as ht:
+def writeHtml(soup,testcase):
+    with open('%s_%s.html' % (now,testcase),'w') as ht:
         ht.writelines(soup)
 # 将数据添加到td中,tag就是trtd的html，argList为四位数据，最终返回添加数据的trtd
 def handelTrTd(tag,argList):
