@@ -42,7 +42,7 @@ def outpu(argLists,testcase):
     
 
 def writeHtml(soup,testcase):
-    with open('%s_%s.html' % (now,testcase),'w') as ht:
+    with open('%s_%s.html' % (now,testcase.split('.')[0].upper()),'w') as ht:
         ht.writelines(soup)
 # 将数据添加到td中,tag就是trtd的html，argList为四位数据，最终返回添加数据的trtd
 def handelTrTd(tag,argList):

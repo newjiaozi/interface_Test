@@ -13,6 +13,8 @@ Created on 2016��2��27��
 import os,re
 import requests
 import xlrd
+import json
+
 from xlutils.copy import copy
 from sys import argv
 from outputResult import outpu
@@ -22,7 +24,8 @@ sep_o = os.path.sep
 testcase=''
 
 if len(argv) == 1:
-    testcase = 'testdata%sorder_leiyabin_20160504.xls' % sep_o
+    testcase_dir = 'testdata%s' % sep_o
+    testcase = testcase_dir + 'company_zhangqiang_20160510.xls'
 elif len(argv) == 2:
     testcase = argv[1]
 print testcase
@@ -48,13 +51,12 @@ def doTest():
 def callAPI(write_data,row,params):
 
 
-#     print params
+    print params
     if params[9] == 'yes':
-        if params[6]:
-            
+        if params[6]:            
             print params[2],params[0]+params[1],eval(params[3]),eval(params[6])
             resp = requests.request(params[2],params[0]+params[1],headers=eval(params[3]),json=eval(params[6]))
-#             print resp.json()
+            print resp.json()
 #             if int(params[7]) == resp.json().get('ret',None):
 #                 pass_R='Yes'     
 #             elif int(params[7]) == 0:
@@ -108,18 +110,10 @@ def callAPI(write_data,row,params):
 #         write_data.get_sheet(0).write(row,10,result) 
 def getResutJson(resp,write_data,row):   
     result = resp.json()
-    output = handleResult(result)
-    write_data.get_sheet(0).write(row,10,output)
-    
-
-def checkSub(param):    
-    pattern = re.compile(r'#(\d*)#(\w*)')
-    result = pattern.findall(param)
-    if result:
-        for i in range(len(result)):
-            print "##",i
-    return result
-    
+#     output = handleResult(result)
+    write_data.get_sheet(0).write(row,10,json.dumps(result,indent=4,ensure_ascii=False))
+#     write_data.get_sheet(0).write(row,11,output)
+   
     
 
 def checkResult(params,resp,write_data,row):
@@ -136,8 +130,7 @@ def checkResult(params,resp,write_data,row):
             pass_R='Yes'                           
     argLists.append([params[1],params[8],pass_R,str(resp.elapsed.total_seconds())])  
     getResutJson(resp,write_data,row) 
-    
-    
+  
          
 
 
@@ -151,8 +144,10 @@ def handleResult(result):
             if isinstance(data, list) and data:                    
                 responsLists.append(data)
                 for i in data:
-                    for j in i:
-                        output += u'%s : %s%s' % (j,i[j],ls)
+
+#                     for j in i:
+#                         output += u'%s : %s%s' % (j,i[j],ls)
+                    output += u'%s' % i
             elif isinstance(data,dict) and data:
                 responsLists.append(data)
                 for i in data:
