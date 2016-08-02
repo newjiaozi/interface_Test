@@ -27,7 +27,7 @@ testcase=''
 if len(argv) == 1:
 #     testcase_dir = 'testdata%s' % sep_o
 #     testcase = testcase_dir + 'test.xls'
-    testcase = 'test.xls'
+    testcase = 'test20160802.xls'
 elif len(argv) == 2:
     testcase = argv[1]
 print testcase
@@ -42,18 +42,19 @@ def doTest():
 
 def callAPI(write_data,row,params):
     if params[7] == 'yes':
+        resp_json=''
+#         print params
         resp = requests.request(params[2],params[0]+params[1],headers=eval(params[3]),json=eval(params[4]))        
-        print "````",resp.text
-        resp_json = resp.json()
-        
+        print row,"RESP::",resp.text
+        resp_json = resp.json()        
 #         print "##############",resp_json,"##############",type(resp_json)
 #         print "@@@@@@@@@@@@@@",json.dumps(resp_json),"@@@@@@@@@@@@@@",type(json.dumps(resp_json))
         write_data.get_sheet(0).write(row,8,json.dumps(resp_json,indent=4,ensure_ascii=False))  
         pass_res="No"
         resp_code = resp_json.get('code',None)
-        print resp_code,type(resp_code),params[5],type(params[5]),type(int(resp_code))
+#         print resp_code,type(resp_code),params[5],type(params[5]),type(int(resp_code))
         if int(resp_code) == int(params[5]):
-            print "____"
+#             print "____"
             pass_res ="Yes"
         write_data.get_sheet(0).write(row,9,pass_res)           
 
