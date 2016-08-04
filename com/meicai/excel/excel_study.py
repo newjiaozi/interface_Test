@@ -20,6 +20,7 @@ from xlutils.copy import copy
 from sys import argv
 
 
+
 ls = os.linesep
 sep_o = os.path.sep
 testcase=''
@@ -27,7 +28,7 @@ testcase=''
 if len(argv) == 1:
 #     testcase_dir = 'testdata%s' % sep_o
 #     testcase = testcase_dir + 'test.xls'
-    testcase = 'test20160802.xls'
+    testcase = 'test20160804-online.xls'
 elif len(argv) == 2:
     testcase = argv[1]
 print testcase
@@ -46,14 +47,25 @@ def callAPI(write_data,row,params):
 #         print params
         resp = requests.request(params[2],params[0]+params[1],headers=eval(params[3]),json=eval(params[4]))        
         print row,"RESP::",resp.text
-        resp_json = resp.json()        
-#         print "##############",resp_json,"##############",type(resp_json)
-#         print "@@@@@@@@@@@@@@",json.dumps(resp_json),"@@@@@@@@@@@@@@",type(json.dumps(resp_json))
-        write_data.get_sheet(0).write(row,8,json.dumps(resp_json,indent=4,ensure_ascii=False))  
+        
+        try:
+            resp_json = resp.json()
+            json_string = json.dumps(resp_json,indent=4,ensure_ascii=False)
+            if len(json_string)> 32737:
+                json_string=u'响应值过大，请参看日志记录'
+            write_data.get_sheet(0).write(row,8,json_string)  
+        except ValueError:
+            resp_text = resp.text
+            write_data.get_sheet(0).write(row,8,resp_text)  
+#         resp_json = resp.json()        
+#  
+#         write_data.get_sheet(0).write(row,8,json.dumps(resp_json,indent=4,ensure_ascii=False))  
         pass_res="No"
-        resp_code = resp_json.get('code',None)
+        resp_code=''
+        if isinstance(resp_json, dict):
+            resp_code = resp_json.get('code',None)
 #         print resp_code,type(resp_code),params[5],type(params[5]),type(int(resp_code))
-        if int(resp_code) == int(params[5]):
+        if resp_code and int(resp_code) == int(params[5]):
 #             print "____"
             pass_res ="Yes"
         write_data.get_sheet(0).write(row,9,pass_res)           
