@@ -22,29 +22,39 @@ import json
 from xlutils.copy import copy
 from sys import argv
 
-
+# import time
 
 ls = os.linesep
 sep_o = os.path.sep
 testcase=''
 
 if len(argv) == 1:
-
-    testcase = 'test20160811_nono.xls'
+#     testcase = u'20161110_公积金_网银_online.xls'
+#     testcase = u'20161110_白骑士_online.xls'
+    testcase = u"20161128_监控平台_stb.xls"
 elif len(argv) == 2:
     testcase = argv[1]
 print testcase
 
+
+pass_count = 0
+case_count = 0
+
 def doTest():
+    print u"####----    执行中..."
     data = xlrd.open_workbook(testcase)
     table = data.sheet_by_index(0)
     write_data = copy(data) 
     for row in range(1,table.nrows):
+#         time.sleep(1)
         callAPI(write_data,row,tuple(table.row_values(row)))   
     write_data.save(testcase) 
+    print u"####----    总共%s个CASE,通过%s个 CASE" % (case_count,pass_count)
 
 def callAPI(write_data,row,params):
     if params[9] == 'yes':
+        global case_count
+        case_count += 1
         resp =''
         resp_json=''
         resp_text=''
@@ -55,38 +65,42 @@ def callAPI(write_data,row,params):
                
             elif params[5]:
                 resp = requests.request(params[2],params[0]+params[1],headers=eval(params[3]),data=eval(params[5]))        
-#                 print row,"RESP::",resp.text
         elif params[2] == "GET":
             resp = requests.request(params[2],params[0]+params[1],headers=eval(params[3]),params=eval(params[6]))        
-#             print row,"RESP::",resp.text            
         print row,"RESP::",resp.text
         try:
             resp_json = resp.json()
             json_string = json.dumps(resp_json,indent=4,ensure_ascii=False)
             if len(json_string)> 32737:
                 json_string=u'响应值过大，请参看日志记录'
+                print json_string
             write_data.get_sheet(0).write(row,10,json_string)  
         except ValueError:
             resp_text = resp.text
             write_data.get_sheet(0).write(row,10,resp_text)  
  
-        pass_res = "FAIL"        
-        if isinstance(resp_json,dict):            
+        pass_res = "FAIL"  
+              
+        if isinstance(resp_json,dict) and params[7]:            
             pass_num = 0             
             check_point_dict = eval(params[7])
             for i in check_point_dict:
                 if resp_json.get(i,None) == check_point_dict[i]:
+#                     print "AAA=",resp_json.get(i,None),"--","BBB=",check_point_dict[i]
                     pass_num += 1
             check_point_dict_length = len(check_point_dict)
             if pass_num == check_point_dict_length:
                 pass_res = 'PASS'
-                print u"####通过的checkpoint数为%s，checkpoint总数为：%s！####" % (pass_num,check_point_dict_length)
-        write_data.get_sheet(0).write(row,11,pass_res)           
+                global pass_count
+                pass_count += 1
+#                 print u"####通过的checkpoint数为%s，checkpoint总数为：%s！####" % (pass_num,check_point_dict_length)
+        write_data.get_sheet(0).write(row,11,pass_res)
+                  
 
 
 if __name__ == "__main__":
     doTest()
-        
+ 
         
         
     
