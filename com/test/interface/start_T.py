@@ -29,9 +29,9 @@ sep_o = os.path.sep
 testcase=''
 
 if len(argv) == 1:
-#     testcase = u'20161110_公积金_网银_online.xls'
-#     testcase = u'20161110_白骑士_online.xls'
-    testcase = u"20161128_监控平台_stb.xls"
+    testcase = u'20171220_ZROBOT盘古分数 _stb.xls'
+#     testcase = u'20171220_ZROBOT盘古分数 _prd.xls'
+ 
 elif len(argv) == 2:
     testcase = argv[1]
 print testcase
@@ -71,12 +71,15 @@ def callAPI(write_data,row,params):
         try:
             resp_json = resp.json()
             json_string = json.dumps(resp_json,indent=4,ensure_ascii=False)
-            if len(json_string)> 32737:
+            if len(json_string)> 32737:                
+                with open("%s%s.txt" % (testcase,row+1),"w") as f1:
+                    f1.write(json_string.encode("gbk"))
                 json_string=u'响应值过大，请参看日志记录'
-                print json_string
+#             print "##########",json_string 
             write_data.get_sheet(0).write(row,10,json_string)  
         except ValueError:
             resp_text = resp.text
+#             print "##########",resp_text
             write_data.get_sheet(0).write(row,10,resp_text)  
  
         pass_res = "FAIL"  
@@ -97,14 +100,6 @@ def callAPI(write_data,row,params):
         write_data.get_sheet(0).write(row,11,pass_res)
                   
 
-
 if __name__ == "__main__":
     doTest()
  
-        
-        
-    
-    
-
-
-
