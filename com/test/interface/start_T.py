@@ -29,8 +29,8 @@ sep_o = os.path.sep
 testcase=''
 
 if len(argv) == 1:
-    testcase = u'20171220_ZROBOT盘古分数 _stb.xls'
-#     testcase = u'20171220_ZROBOT盘古分数 _prd.xls'
+#     testcase = u'20171220_ZROBOT盘古分数 _stb.xls'
+    testcase = u'20171220_ZROBOT盘古分数 _prd.xls'
  
 elif len(argv) == 2:
     testcase = argv[1]
