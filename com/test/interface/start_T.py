@@ -21,6 +21,8 @@ import json
 
 from xlutils.copy import copy
 from sys import argv
+# from compiler.syntax import check
+# from nntplib import resp
 
 # import time
 
@@ -29,8 +31,10 @@ sep_o = os.path.sep
 testcase=''
 
 if len(argv) == 1:
-#     testcase = u'20171220_ZROBOT盘古分数 _stb.xls'
-    testcase = u'20171220_ZROBOT盘古分数 _prd.xls'
+#     testcase = u'20180418_身份认证idauth_stb.xls'
+    testcase = u'20180423_身份认证idauth_stb.xls'
+
+#     testcase = u'20180416_身份认证_stb.xls'
  
 elif len(argv) == 2:
     testcase = argv[1]
@@ -46,7 +50,6 @@ def doTest():
     table = data.sheet_by_index(0)
     write_data = copy(data) 
     for row in range(1,table.nrows):
-#         time.sleep(1)
         callAPI(write_data,row,tuple(table.row_values(row)))   
     write_data.save(testcase) 
     print u"####----    总共%s个CASE,通过%s个 CASE" % (case_count,pass_count)
@@ -58,7 +61,6 @@ def callAPI(write_data,row,params):
         resp =''
         resp_json=''
         resp_text=''
-#         print params
         if params[2] == "POST":
             if params[4]:
                 resp = requests.request(params[2],params[0]+params[1],headers=eval(params[3]),json=eval(params[4]))        
@@ -67,19 +69,17 @@ def callAPI(write_data,row,params):
                 resp = requests.request(params[2],params[0]+params[1],headers=eval(params[3]),data=eval(params[5]))        
         elif params[2] == "GET":
             resp = requests.request(params[2],params[0]+params[1],headers=eval(params[3]),params=eval(params[6]))        
-        print row,"RESP::",resp.text
+        print row+1,"RESP::",resp.text
         try:
             resp_json = resp.json()
             json_string = json.dumps(resp_json,indent=4,ensure_ascii=False)
             if len(json_string)> 32737:                
                 with open("%s%s.txt" % (testcase,row+1),"w") as f1:
-                    f1.write(json_string.encode("gbk"))
+                    f1.write(json_string.encode("utf-8"))
                 json_string=u'响应值过大，请参看日志记录'
-#             print "##########",json_string 
             write_data.get_sheet(0).write(row,10,json_string)  
         except ValueError:
             resp_text = resp.text
-#             print "##########",resp_text
             write_data.get_sheet(0).write(row,10,resp_text)  
  
         pass_res = "FAIL"  
@@ -88,15 +88,37 @@ def callAPI(write_data,row,params):
             pass_num = 0             
             check_point_dict = eval(params[7])
             for i in check_point_dict:
-                if resp_json.get(i,None) == check_point_dict[i]:
-#                     print "AAA=",resp_json.get(i,None),"--","BBB=",check_point_dict[i]
-                    pass_num += 1
+                check_data = check_point_dict[i]
+                if isinstance(check_data, dict):
+                    inner_pass_num = 0
+                    for j in check_data:
+                        try:
+                            data_value = resp_json[i][j]
+                            if isinstance(check_data[j],str) and check_data[j].startswith('LIKE'):
+                                assert check_data[j][4:] in data_value
+                                inner_pass_num +=1
+                            else:
+                                assert check_data[j] == resp_json[i][j]
+                                inner_pass_num +=1
+                        except Exception,e:
+                            print e
+                            break
+                    if len(check_data) == inner_pass_num:
+                        pass_num +=1
+                    
+                else:
+                    if isinstance(check_data,str) and check_data.startswith('LIKE'):
+                        if check_data[4:] in resp_json.get(i,None):
+                            pass_num +=1
+                    else:
+                        if resp_json.get(i,None) == check_data:
+                            pass_num += 1
+                            
             check_point_dict_length = len(check_point_dict)
             if pass_num == check_point_dict_length:
                 pass_res = 'PASS'
                 global pass_count
                 pass_count += 1
-#                 print u"####通过的checkpoint数为%s，checkpoint总数为：%s！####" % (pass_num,check_point_dict_length)
         write_data.get_sheet(0).write(row,11,pass_res)
                   
 
